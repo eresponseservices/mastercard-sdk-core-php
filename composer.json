@@ -2,6 +2,10 @@
     "name": "eresponseservices/mastercard-api-core",
     "description": "This is the core or base package of the MasterCard Api, all different flavours of Api provided by MasterCard will reuse this package",
     "version": "1.4.7",
+    "repositories": [{
+        "type": "composer",
+        "url": "https://satis.chargebacks911.com"
+    }],
     "license": "proprietary",
     "authors": [
         {
