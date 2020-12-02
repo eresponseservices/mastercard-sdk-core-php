@@ -51,15 +51,15 @@ class ApiController {
     protected $client = null;
     protected $version = "NOT-SET";
     protected $logger = null;
-    
-    
-    
+
+
+
 
     function __construct() {
 
-          
+
         $this->logger = new Logger('ApiController');
-        
+
         $this->checkState();
 
         $this->client = new Client([
@@ -106,7 +106,7 @@ class ApiController {
     }
 
     /**
-     * This method generated the URL 
+     * This method generated the URL
      * @param type $operationConfig
      * @param type $operationMetadata
      * @param type $inputMap
@@ -115,7 +115,7 @@ class ApiController {
     public function getUrl($operationConfig, $operationMetadata, &$inputMap) {
 
         $queryParams = array();
-        
+
         $action = $operationConfig->getAction();
         $resourcePath = $operationConfig->getResourcePath();
         $queryList = $operationConfig->getQueryParams();
@@ -123,23 +123,23 @@ class ApiController {
 
         //arizzini: we need to validate the host
         $this->validateHost($resolvedHostUrl);
-        
+
         $url = "%s";
-        
+
         //arizzini: we need to apply the environment variable.
         if (strpos($resourcePath, "#env") !== FALSE) {
             $environment = "";
             if (!empty($operationMetadata->getContext())) {
                  $environment = $operationMetadata->getContext();
-            } 
-            
+            }
+
             $resourcePath = str_replace("#env", $environment, $resourcePath);
             $resourcePath = str_replace("//", "/", $resourcePath);
         }
-        
+
         $tmpUrl = Util::getReplacedPath($this->removeForwardSlashFromTail($resolvedHostUrl).$this->removeForwardSlashFromTail($resourcePath), $inputMap);
         array_push($queryParams, $tmpUrl);
-        
+
         switch ($action) {
             case "read":
             case "delete":
@@ -156,8 +156,8 @@ class ApiController {
             default:
                 break;
         }
-        
-        // we need to remove any queryParameters specified in the inputMap and 
+
+        // we need to remove any queryParameters specified in the inputMap and
         // add them as quertParameters
         switch ($action) {
             case "create":
@@ -179,12 +179,12 @@ class ApiController {
             $url = $this->appendToQueryString($url, "Format=JSON");
         }
         $url = vsprintf($url, $queryParams);
-        
+
         return $url;
     }
 
-    
-    
+
+
     /**
      * This function is used to valide the host
      * ApiConfig subDomain
@@ -204,18 +204,18 @@ class ApiController {
      * @return type
      */
     public function getRequest($operationConfig, $operationMetadata, &$inputMap) {
-        
+
         $action = $operationConfig->getAction();
         $resourcePath = $operationConfig->getResourcePath();
         $headerList = $operationConfig->getHeaderParams();
         $queryList = $operationConfig->getQueryParams();
-        
+
         //arizzini: store seperately the header paramters
         $headerMap = Util::subMap($inputMap, $headerList);
-        
+
         $url = $this->getUrl($operationConfig, $operationMetadata, $inputMap);
-        
-                
+
+
 //        echo "-------------------------------------\n";
 //        echo "-------------------------------------\n";
 //        echo "url: $url \n";
@@ -226,8 +226,8 @@ class ApiController {
         if (!empty($operationMetadata->getContentTypeOverride())) {
             $contentType = $operationMetadata->getContentTypeOverride()."; charset=utf-8";
         }
-        
-        
+
+
         $request = null;
         $requestBody = null;
         if (!empty($inputMap)) {
@@ -254,11 +254,11 @@ class ApiController {
                 $request = new Request("GET", $url);
                 break;
         }
-        
+
         $request = $request->withHeader("Accept", $contentType);
         $request = $request->withHeader("User-Agent", Constants::getCoreVersion() ."/". $operationMetadata->getApiVersion());
         foreach ($headerMap as $key => $value) {
-            $request = $request->withHeader($key, $value);    
+            $request = $request->withHeader($key, $value);
         }
         $request = ApiConfig::getAuthentication()->signRequest($url, $request);
 
@@ -280,21 +280,21 @@ class ApiController {
             $response = $this->client->send($request, array_merge(ApiConfig::getProxy(), ApiConfig::getTimeout()));
             $statusCode = $response->getStatusCode();
             $responseContent = $response->getBody()->getContents();
-            
+
             if ($statusCode < self::HTTP_AMBIGUOUS) {
-                
+
                 if (ApiConfig::isDebug()) {
                     $this->logger->debug("---------------------");
-                    $this->logger->debug(">>request(".$request->getMethod().") ". $request->getUri()->__toString() );    
+                    $this->logger->debug(">>request(".$request->getMethod().") ". $request->getUri()->__toString() );
                     $this->logger->debug(">>headers: ", $request->getHeaders());
                     $this->logger->debug(">>body: ". $request->getBody());
-                    
+
                     $this->logger->debug("<<statusCode: ". $statusCode);
                     $this->logger->debug("<<headers: ", $response->getHeaders());
                     $this->logger->debug("<<body: ". $responseContent);
                     $this->logger->debug("---------------------");
                 }
-                
+
                 if (strlen($responseContent) > 0) {
                     return json_decode($responseContent, true);
                 } else {
@@ -318,15 +318,17 @@ class ApiController {
         $bodyArray = json_decode($bodyContent, TRUE);
 
         //arizzini: in the case of an exception we always show the error.
-        $this->logger->debug("---------------------");
-        $this->logger->debug(">>request(".$request->getMethod().") ". $request->getUri()->__toString() );    
-        $this->logger->debug(">>headers: ", $request->getHeaders());
-        $this->logger->debug(">>body: ". $request->getBody());
-        
-        $this->logger->debug("<<statusCode: ". $response->getStatusCode());
-        $this->logger->debug("<<headers: ", $response->getHeaders());
-        $this->logger->debug("<<body: ". $bodyContent);
-        $this->logger->debug("---------------------");
+        if (ApiConfig::isDebug()) {
+            $this->logger->debug("---------------------");
+            $this->logger->debug(">>request(".$request->getMethod().") ". $request->getUri()->__toString() );
+            $this->logger->debug(">>headers: ", $request->getHeaders());
+            $this->logger->debug(">>body: ". $request->getBody());
+
+            $this->logger->debug("<<statusCode: ". $response->getStatusCode());
+            $this->logger->debug("<<headers: ", $response->getHeaders());
+            $this->logger->debug("<<body: ". $bodyContent);
+            $this->logger->debug("---------------------");
+        }
 
         throw new ApiException("Internal Server Error:", $status, $bodyArray);
 
