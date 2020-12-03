@@ -1,8 +1,12 @@
 {
-    "name": "mastercard/mastercard-api-core",
+    "name": "eresponseservices/mastercard-sdk-core-php",
     "description": "This is the core or base package of the MasterCard Api, all different flavours of Api provided by MasterCard will reuse this package",
     "version": "1.4.7",
-    "license": "BSD-3-Clause",
+    "repositories": [{
+        "type": "composer",
+        "url": "https://satis.chargebacks911.com"
+    }],
+    "license": "proprietary",
     "authors": [
         {
             "name": "MasterCard Worldwide",
