@@ -1,7 +1,7 @@
 {
     "name": "eresponseservices/mastercard-sdk-core-php",
     "description": "This is the core or base package of the MasterCard Api, all different flavours of Api provided by MasterCard will reuse this package",
-    "version": "1.4.9",
+    "version": "1.4.11",
     "repositories": [{
         "type": "composer",
         "url": "https://satis.chargebacks911.com"
